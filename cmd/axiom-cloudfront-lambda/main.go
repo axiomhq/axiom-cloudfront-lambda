@@ -17,7 +17,7 @@ import (
 	"github.com/axiomhq/pkg/cmd"
 	"go.uber.org/zap"
 
-	"github.com/axiomhq/axiom-cloudfront-lambda/pkg/parser"
+	"github.com/axiomhq/axiom-cloudfront-lambda/parser"
 )
 
 func main() {
