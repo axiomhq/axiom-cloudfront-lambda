@@ -1,7 +1,9 @@
 package main
 
 import (
+	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -56,17 +58,30 @@ func handler(client *axiom.Client, dataset string) func(context.Context, events.
 			}
 
 			// fetch logs from S3
-			rdr, err := downloadS3Object(record.S3)
+			objectReader, err := downloadS3Object(record.S3)
 			if err != nil {
 				return err
 			}
 
 			// parse logs
-			events, err := parser.ParseCloudfrontLogs(rdr)
+			gzipReader, err := gzip.NewReader(objectReader)
+			if err != nil {
+				return fmt.Errorf("failed to gunzip file: %w", err)
+			}
+
+			// parse logs
+			events, err := parser.ParseCloudfrontLogs(gzipReader)
 			if err != nil {
 				return err
 			}
-			if err := rdr.Close(); err != nil {
+
+			// close s3Reader
+			if err := objectReader.Close(); err != nil {
+				return err
+			}
+
+			// close gzip reader
+			if err := gzipReader.Close(); err != nil {
 				return err
 			}
 
