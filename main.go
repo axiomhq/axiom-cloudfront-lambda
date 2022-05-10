@@ -63,7 +63,7 @@ func handler(client *axiom.Client, dataset string) func(context.Context, events.
 				return err
 			}
 
-			// parse logs
+			// gunzip
 			gzipReader, err := gzip.NewReader(objectReader)
 			if err != nil {
 				return fmt.Errorf("failed to gunzip file: %w", err)
