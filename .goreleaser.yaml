@@ -8,7 +8,6 @@ builds:
       - amd64
     binary: axiom-cloudfront-lambda
     main: ./cmd/axiom-cloudfront-lambda
-    build: 
     env:
       - CGO_ENABLED=0
     tags:
