@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/axiomhq/axiom-cloudfront-lambda/parser"
 	"github.com/axiomhq/axiom-go/axiom"
@@ -37,7 +38,8 @@ func run(ctx context.Context, _ *zap.Logger, client *axiom.Client) error {
 
 func downloadS3Object(entity events.S3Entity) (io.ReadCloser, error) {
 	// Download S3 object
-	s3Client := s3.New(nil)
+	sess := session.Must(session.NewSession())
+	s3Client := s3.New(sess)
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(entity.Bucket.Name),
 		Key:    aws.String(entity.Object.Key),
