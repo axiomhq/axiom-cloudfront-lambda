@@ -1,38 +1,22 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"fmt"
+	"io"
 	"log"
 	"os"
-	"sync"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/axiomhq/axiom-cloudfront-lambda/parser"
 	"github.com/axiomhq/axiom-go/axiom"
 	"github.com/axiomhq/pkg/cmd"
 	"go.uber.org/zap"
 )
 
-var (
-	downloader     *s3manager.Downloader
-	downloaderOnce sync.Once
-)
-
 func main() {
-	downloaderOnce.Do(func() {
-		// TODO: Do we need credentials
-		sess := session.Must(session.NewSession())
-		downloader = s3manager.NewDownloader(sess)
-	})
-
 	cmd.Run("axiom-cloudwatch-lambda", run,
 		cmd.WithRequiredEnvVars("AXIOM_DATASET"),
 		cmd.WithValidateAxiomCredentials(),
@@ -49,6 +33,20 @@ func run(ctx context.Context, _ *zap.Logger, client *axiom.Client) error {
 	return nil
 }
 
+func downloadS3Object(entity events.S3Entity) (io.ReadCloser, error) {
+	// Download S3 object
+	s3Client := s3.New(nil)
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(entity.Bucket.Name),
+		Key:    aws.String(entity.Object.Key),
+	}
+	if output, err := s3Client.GetObject(input); err != nil {
+		return nil, err
+	} else {
+		return output.Body, nil
+	}
+}
+
 func handler(client *axiom.Client, dataset string) func(context.Context, events.S3Event) error {
 	return func(ctx context.Context, logsEvent events.S3Event) error {
 		// Parse logs from S3Event
@@ -57,30 +55,22 @@ func handler(client *axiom.Client, dataset string) func(context.Context, events.
 				continue
 			}
 
-			// Download file
-			buf := aws.NewWriteAtBuffer([]byte{})
-			_, err := downloader.DownloadWithContext(ctx, buf, &s3.GetObjectInput{
-				Bucket: aws.String(record.S3.Bucket.Name),
-				Key:    aws.String(record.S3.Object.Key),
-			})
-			if err != nil {
-				return fmt.Errorf("failed to download file: %w", err)
-			}
-			contents := bytes.NewBuffer(buf.Bytes()) // TODO: Can we stream directly into the reader?
-
-			// Gunzip
-			gzipReader, err := gzip.NewReader(contents)
-			if err != nil {
-				return fmt.Errorf("failed to gunzip file: %w", err)
-			}
-
-			// Parse
-			events, err := parser.ParseCloudfrontLogs(gzipReader)
+			// fetch logs from S3
+			rdr, err := downloadS3Object(record.S3)
 			if err != nil {
 				return err
 			}
 
-			// Send logs to Axiom
+			// parse logs
+			events, err := parser.ParseCloudfrontLogs(rdr)
+			if err != nil {
+				return err
+			}
+			if err := rdr.Close(); err != nil {
+				return err
+			}
+
+			// send logs to Axiom
 			if status, err := client.Datasets.IngestEvents(ctx, dataset, axiom.IngestOptions{TimestampField: "time"}, events...); err != nil {
 				return err
 			} else {
