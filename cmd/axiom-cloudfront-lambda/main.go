@@ -13,14 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/axiomhq/axiom-cloudfront-lambda/parser"
 	"github.com/axiomhq/axiom-go/axiom"
 	"github.com/axiomhq/pkg/cmd"
 	"go.uber.org/zap"
+
+	"github.com/axiomhq/axiom-cloudfront-lambda/pkg/parser"
 )
 
 func main() {
-	cmd.Run("axiom-cloudwatch-lambda", run,
+	cmd.Run("axiom-cloudfront-lambda", run,
 		cmd.WithRequiredEnvVars("AXIOM_DATASET"),
 		cmd.WithValidateAxiomCredentials(),
 	)

@@ -10,7 +10,7 @@ import (
 
 func TestParseLogs(t *testing.T) {
 	// read data from data/logs.tsv
-	file, err := os.Open("../data/logs.tsv")
+	file, err := os.Open("testdata/logs.tsv")
 	require.NoError(t, err)
 	defer file.Close()
 
