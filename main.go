@@ -34,6 +34,10 @@ func handler(client *axiom.Client, dataset string) func(context.Context, events.
 	return func(ctx context.Context, logsEvent events.S3Event) error {
 		// Parse logs from S3Event
 		for _, record := range logsEvent.Records {
+			if record.EventName != "ObjectCreated:Put" {
+				continue
+			}
+
 			s3 := record.S3
 
 			// fetch logs from S3
