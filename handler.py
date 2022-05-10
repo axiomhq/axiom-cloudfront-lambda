@@ -90,7 +90,6 @@ def lambda_handler(event, context):
             if axiom_url == None:
                 axiom_url = "https://cloud.axiom.co"
             axiom_token = os.getenv("AXIOM_TOKEN")
-            axiom_org_id = os.getenv("AXIOM_ORG_ID")
             axiom_dataset = os.getenv("AXIOM_DATASET")
 
             url = f"{axiom_url}/api/v1/datasets/{axiom_dataset}/ingest"
@@ -100,7 +99,6 @@ def lambda_handler(event, context):
                 data=bytes(data, "utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "X-Axiom-Org-Id": axiom_org_id,
                     "Authorization": f"Bearer {axiom_token}",
                 },
             )
