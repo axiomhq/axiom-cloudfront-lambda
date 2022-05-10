@@ -15,8 +15,6 @@ jobs:
         with:
           go-version: ${{ env.GOVERSION }}
       - uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.44.2
 
   test:
     name: Test
