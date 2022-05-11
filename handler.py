@@ -26,31 +26,49 @@ def log_to_event(log):
         "location": log["x-edge-location"] if log["x-edge-location"] != "-" else None,
         "bytes": log["sc-bytes"] if log["sc-bytes"] != "-" else None,
         "request_ip": log["c-ip"] if log["c-ip"] != "-" else None,
-        "method": log["cs-method"]  if log["cs-method"] != "-" else None,
+        "method": log["cs-method"] if log["cs-method"] != "-" else None,
         "host": log["cs(Host)"] if log["cs(Host)"] != "-" else None,
         "uri": log["cs-uri-stem"] if log["cs-uri-stem"] != "-" else None,
-        "status": log["sc-status"]  if log["sc-status"] != "-" else None,
+        "status": log["sc-status"] if log["sc-status"] != "-" else None,
         "referrer": log["cs(Referer)"] if log["cs(Referer)"] != "-" else None,
         "user_agent": log["cs(User-Agent)"] if log["cs(User-Agent)"] != "-" else None,
         "query_string": log["cs-uri-query"] if log["cs-uri-query"] != "-" else None,
         "cookie": log["cs(Cookie)"] if log["cs(Cookie)"] != "-" else None,
-        "result_type": log["x-edge-result-type"] if log["x-edge-result-type"] != "-" else None,
-        "request_id": log["x-edge-request-id"] if log["x-edge-request-id"] != "-" else None,
+        "result_type": log["x-edge-result-type"]
+        if log["x-edge-result-type"] != "-"
+        else None,
+        "request_id": log["x-edge-request-id"]
+        if log["x-edge-request-id"] != "-"
+        else None,
         "host_header": log["x-host-header"] if log["x-host-header"] != "-" else None,
         "request_protocol": log["cs-protocol"] if log["cs-protocol"] != "-" else None,
         "request_bytes": log["cs-bytes"] if log["cs-bytes"] != "-" else None,
         "time_taken": log["time-taken"] if log["time-taken"] != "-" else None,
-        "x_forwarded_for": log["x-forwarded-for"] if log["x-forwarded-for"] != "-" else None,
+        "x_forwarded_for": log["x-forwarded-for"]
+        if log["x-forwarded-for"] != "-"
+        else None,
         "ssl_protocol": log["ssl-protocol"] if log["ssl-protocol"] != "-" else None,
         "ssl_cipher": log["ssl-cipher"] if log["ssl-cipher"] != "-" else None,
-        "response_result_type": log["x-edge-response-result-type"] if log["x-edge-response-result-type"] != "-" else None,
-        "http_version": log["cs-protocol-version"] if log["cs-protocol-version"] != "-" else None,
+        "response_result_type": log["x-edge-response-result-type"]
+        if log["x-edge-response-result-type"] != "-"
+        else None,
+        "http_version": log["cs-protocol-version"]
+        if log["cs-protocol-version"] != "-"
+        else None,
         "fle_status": log["fle-status"] if log["fle-status"] != "-" else None,
-        "fle_encrypted_fields": log["fle-encrypted-fields"] if log["fle-encrypted-fields"] != "-" else None,
+        "fle_encrypted_fields": log["fle-encrypted-fields"]
+        if log["fle-encrypted-fields"] != "-"
+        else None,
         "c_port": log["c-port"] if log["c-port"] != "-" else None,
-        "time_to_first_byte": log["time-to-first-byte"] if log["time-to-first-byte"] != "-" else None,
-        "x_edge_detailed_result_type": log["x-edge-detailed-result-type"] if log["x-edge-detailed-result-type"] != "-" else None,
-        "content_type": log["sc-content-type"] if log["sc-content-type"] != "-" else None,
+        "time_to_first_byte": log["time-to-first-byte"]
+        if log["time-to-first-byte"] != "-"
+        else None,
+        "x_edge_detailed_result_type": log["x-edge-detailed-result-type"]
+        if log["x-edge-detailed-result-type"] != "-"
+        else None,
+        "content_type": log["sc-content-type"]
+        if log["sc-content-type"] != "-"
+        else None,
         "content_len": log["sc-content-len"] if log["sc-content-len"] != "-" else None,
         "range_start": log["sc-range-start"] if log["sc-range-start"] != "-" else None,
         "range_end": log["sc-range-end"] if log["sc-range-end"] != "-" else None,

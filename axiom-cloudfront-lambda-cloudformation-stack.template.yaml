@@ -1,0 +1,94 @@
+Parameters:
+  BucketName:
+    Description: The Name of the S3 Bucket.
+    Type: String
+    MinLength: 1
+  AxiomToken:
+    Description: The Token of User in Axiom. Must start with xapt- or xaat.
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    AllowedPattern: "^(xaat-|xait-).*"
+  AxiomURL:
+    Type: String
+    Default: "https://cloud.axiom.co"
+    Description: The URL of Axiom endpoint. Defaults to "https://cloud.axiom.co".
+  AxiomDataset:
+    Type: String
+    Description: The Name of the Dataset in Axiom.
+    MinLength: 1
+Resources:
+  LogsBucket:
+    Type: AWS::S3::Bucket
+    DependsOn:
+      - LogsLambdaPermission
+    Properties:
+      BucketName: !Ref 'BucketName'
+      AccessControl: Private
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:Put'
+            Function: !GetAtt
+              - LogsLambda
+              - Arn
+  LogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+  LogsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+            Effect: Allow
+            Resource:
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref 'LogsBucket'
+              - 'arn:aws:s3:::*/*'
+      PolicyName: axiom-cloudfront-lambda-policy
+      Roles:
+        - !Ref 'LogsRole'
+  LogsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      FunctionName: axiom-cloudfront-lambda
+      Handler: index.lambda_handler
+      Code:
+        ZipFile: |
+          # DO NOT EDIT
+          # CI will replace these comments with the code from ./handler.py
+      Role: !GetAtt
+        - LogsRole
+        - Arn
+      Environment:
+        Variables:
+          AXIOM_TOKEN: !Ref 'AxiomToken'
+          AXIOM_DATASET: !Ref 'AxiomDataset'
+          AXIOM_URL: !Ref 'AxiomURL'
+  LogsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - LogsLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref 'LogsLambda'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub
+        - 'arn:aws:s3:::${BucketSub}'
+        - BucketSub: !Ref 'BucketName'
