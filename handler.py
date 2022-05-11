@@ -50,7 +50,7 @@ def log_to_event(log):
         "c_port": log["c-port"] if log["c-port"] != "-" else None,
         "time_to_first_byte": log["time-to-first-byte"] if log["time-to-first-byte"] != "-" else None,
         "x_edge_detailed_result_type": log["x-edge-detailed-result-type"] if log["x-edge-detailed-result-type"] != "-" else None,
-        "content_type": log["sc_content-type"] if log["sc-content-type"] != "-" else None,
+        "content_type": log["sc-content-type"] if log["sc-content-type"] != "-" else None,
         "content_len": log["sc-content-len"] if log["sc-content-len"] != "-" else None,
         "range_start": log["sc-range-start"] if log["sc-range-start"] != "-" else None,
         "range_end": log["sc-range-end"] if log["sc-range-end"] != "-" else None,
