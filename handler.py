@@ -14,9 +14,6 @@ fields_prefix = "#Fields: "
 
 # Fields: date time x-edge-location sc-bytes c-ip cs-method cs(Host) cs-uri-stem sc-status cs(Referer) cs(User-Agent) cs-uri-query cs(Cookie) x-edge-result-type x-edge-request-id x-host-header cs-protocol cs-bytes time-taken x-forwarded-for ssl-protocol ssl-cipher x-edge-response-result-type cs-protocol-version fle-status fle-encrypted-fields c-port time-to-first-byte x-edge-detailed-result-type sc-content-type sc-content-len sc-range-start sc-range-end
 def log_to_event(log):
-    if log is None:
-        return
-
     if "time" not in log:
         return
 
@@ -111,18 +108,6 @@ def fetch_s3_object(bucket, key):
     return decompressed_body
 
 
-def event_from_line(line):
-    # parse line to event
-    if line.startswith(fields_prefix):
-        columns = line[len(fields_prefix) :].split(" ")
-        return None
-    elif line.startswith("#"):
-        return None
-
-    values = line.split("\t")
-    return dict(zip(columns, values))
-
-
 def lambda_handler(event, context):
     for record in event["Records"]:
         # Get the object from the event and show its content type
@@ -134,9 +119,18 @@ def lambda_handler(event, context):
             decompressed_body = fetch_s3_object(bucket, key)
 
             # parse TSV
+            lines = str(decompressed_body, "utf-8").split("\n")
+            columns = []
             events = []
-            for line in str(decompressed_body, "utf-8").split("\n"):
-                ev = log_to_event(event_from_line(line))
+            for line in lines:
+                if line.startswith(fields_prefix):
+                    columns = line[len(fields_prefix) :].split(" ")
+                    continue
+                elif line.startswith("#"):
+                    continue
+
+                values = line.split("\t")
+                ev = log_to_event(dict(zip(columns, values)))
                 if ev is not None:
                     events.append(ev)
 
