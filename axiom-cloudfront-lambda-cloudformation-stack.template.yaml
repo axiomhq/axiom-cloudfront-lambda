@@ -4,7 +4,7 @@ Parameters:
     Type: String
     MinLength: 1
   AxiomToken:
-    Description: The Token of User in Axiom. Must start with xapt- or xaat.
+    Description: The Token of User in Axiom. Must start with xaat- or xait-.
     Type: String
     NoEcho: true
     MinLength: 1
