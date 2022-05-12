@@ -5,6 +5,7 @@ import urllib
 
 import boto3
 from dateutil.parser import parse
+from urllib.parse import unquote
 
 print("Loading function")
 
@@ -129,7 +130,7 @@ def lambda_handler(event, context):
                 elif line.startswith("#"):
                     continue
 
-                values = line.split("\t")
+                values = unquote(line).split("\t")
                 ev = log_to_event(dict(zip(columns, values)))
                 if ev is not None:
                     events.append(ev)
