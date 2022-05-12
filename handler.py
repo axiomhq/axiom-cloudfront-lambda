@@ -1,10 +1,11 @@
-import json
-import urllib
-import boto3
 import gzip
+import json
 import os
+import urllib
 
+import boto3
 from dateutil.parser import parse
+from urllib.parse import unquote
 
 print("Loading function")
 
@@ -14,7 +15,7 @@ fields_prefix = "#Fields: "
 
 # Fields: date time x-edge-location sc-bytes c-ip cs-method cs(Host) cs-uri-stem sc-status cs(Referer) cs(User-Agent) cs-uri-query cs(Cookie) x-edge-result-type x-edge-request-id x-host-header cs-protocol cs-bytes time-taken x-forwarded-for ssl-protocol ssl-cipher x-edge-response-result-type cs-protocol-version fle-status fle-encrypted-fields c-port time-to-first-byte x-edge-detailed-result-type sc-content-type sc-content-len sc-range-start sc-range-end
 def log_to_event(log):
-    if not "time" in log:
+    if "time" not in log:
         return
 
     d = log["date"] if "date" in log else ""
@@ -24,12 +25,12 @@ def log_to_event(log):
     ev = {
         "_time": int(dt.timestamp() * 1e9),
         "location": log["x-edge-location"] if log["x-edge-location"] != "-" else None,
-        "bytes": log["sc-bytes"] if log["sc-bytes"] != "-" else None,
+        "bytes": int(log["sc-bytes"]) if log["sc-bytes"] != "-" else None,
         "request_ip": log["c-ip"] if log["c-ip"] != "-" else None,
         "method": log["cs-method"] if log["cs-method"] != "-" else None,
         "host": log["cs(Host)"] if log["cs(Host)"] != "-" else None,
         "uri": log["cs-uri-stem"] if log["cs-uri-stem"] != "-" else None,
-        "status": log["sc-status"] if log["sc-status"] != "-" else None,
+        "status": int(log["sc-status"]) if log["sc-status"] != "-" else None,
         "referrer": log["cs(Referer)"] if log["cs(Referer)"] != "-" else None,
         "user_agent": log["cs(User-Agent)"] if log["cs(User-Agent)"] != "-" else None,
         "query_string": log["cs-uri-query"] if log["cs-uri-query"] != "-" else None,
@@ -42,8 +43,8 @@ def log_to_event(log):
         else None,
         "host_header": log["x-host-header"] if log["x-host-header"] != "-" else None,
         "request_protocol": log["cs-protocol"] if log["cs-protocol"] != "-" else None,
-        "request_bytes": log["cs-bytes"] if log["cs-bytes"] != "-" else None,
-        "time_taken": log["time-taken"] if log["time-taken"] != "-" else None,
+        "request_bytes": int(log["cs-bytes"]) if log["cs-bytes"] != "-" else None,
+        "time_taken_s": float(log["time-taken"]) if log["time-taken"] != "-" else None,
         "x_forwarded_for": log["x-forwarded-for"]
         if log["x-forwarded-for"] != "-"
         else None,
@@ -59,8 +60,8 @@ def log_to_event(log):
         "fle_encrypted_fields": log["fle-encrypted-fields"]
         if log["fle-encrypted-fields"] != "-"
         else None,
-        "c_port": log["c-port"] if log["c-port"] != "-" else None,
-        "time_to_first_byte": log["time-to-first-byte"]
+        "port": int(log["c-port"]) if log["c-port"] != "-" else None,
+        "time_to_first_byte_s": float(log["time-to-first-byte"])
         if log["time-to-first-byte"] != "-"
         else None,
         "x_edge_detailed_result_type": log["x-edge-detailed-result-type"]
@@ -69,11 +70,43 @@ def log_to_event(log):
         "content_type": log["sc-content-type"]
         if log["sc-content-type"] != "-"
         else None,
-        "content_len": log["sc-content-len"] if log["sc-content-len"] != "-" else None,
+        "content_len": int(log["sc-content-len"])
+        if log["sc-content-len"] != "-"
+        else None,
         "range_start": log["sc-range-start"] if log["sc-range-start"] != "-" else None,
         "range_end": log["sc-range-end"] if log["sc-range-end"] != "-" else None,
     }
     return ev
+
+
+def push_events_to_axiom(events):
+    # push events to axiom
+    axiom_url = os.getenv("AXIOM_URL")
+    if axiom_url == None:
+        axiom_url = "https://cloud.axiom.co"
+    axiom_token = os.getenv("AXIOM_TOKEN")
+    axiom_dataset = os.getenv("AXIOM_DATASET")
+
+    url = f"{axiom_url}/api/v1/datasets/{axiom_dataset}/ingest"
+    data = json.dumps(events)
+    req = urllib.request.Request(
+        url,
+        data=bytes(data, "utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {axiom_token}",
+        },
+    )
+    result = urllib.request.urlopen(req)
+    return result
+
+
+def fetch_s3_object(bucket, key):
+    # get and decompress object
+    response = s3.get_object(Bucket=bucket, Key=key)
+    body = response["Body"].read()
+    decompressed_body = gzip.decompress(body)
+    return decompressed_body
 
 
 def lambda_handler(event, context):
@@ -82,10 +115,9 @@ def lambda_handler(event, context):
         bucket = record["s3"]["bucket"]["name"]
         key = urllib.parse.unquote_plus(record["s3"]["object"]["key"], encoding="utf-8")
         try:
+
             # get and decompress object
-            response = s3.get_object(Bucket=bucket, Key=key)
-            body = response["Body"].read()
-            decompressed_body = gzip.decompress(body)
+            decompressed_body = fetch_s3_object(bucket, key)
 
             # parse TSV
             lines = str(decompressed_body, "utf-8").split("\n")
@@ -98,30 +130,13 @@ def lambda_handler(event, context):
                 elif line.startswith("#"):
                     continue
 
-                values = line.split("\t")
+                values = unquote(line).split("\t")
                 ev = log_to_event(dict(zip(columns, values)))
-                if ev != None:
+                if ev is not None:
                     events.append(ev)
 
             # send to Axiom
-            axiom_url = os.getenv("AXIOM_URL")
-            if axiom_url == None:
-                axiom_url = "https://cloud.axiom.co"
-            axiom_token = os.getenv("AXIOM_TOKEN")
-            axiom_dataset = os.getenv("AXIOM_DATASET")
-
-            url = f"{axiom_url}/api/v1/datasets/{axiom_dataset}/ingest"
-            data = json.dumps(events)
-            req = urllib.request.Request(
-                url,
-                data=bytes(data, "utf-8"),
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {axiom_token}",
-                },
-            )
-            result = urllib.request.urlopen(req)
-
+            result = push_events_to_axiom(events)
             if result.status != 200:
                 raise f"Unexpected status {result.status}"
             else:
