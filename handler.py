@@ -8,7 +8,9 @@ from dateutil.parser import parse
 
 print("Loading function")
 
-s3 = boto3.client("s3")
+region = os.getenv("AWS_REGION") # add automatically by lambda
+
+s3 = boto3.client("s3", region_name=region)
 fields_prefix = "#Fields: "
 
 
