@@ -10,6 +10,7 @@ from dateutil.parser import parse
 print("Loading function")
 
 region = os.getenv("AWS_REGION")  # add automatically by lambda
+batch_size = int(os.getenv("BATCH_SIZE", 2000))
 
 s3 = boto3.client("s3", region_name=region)
 fields_prefix = "#Fields: "
@@ -150,10 +151,10 @@ def lambda_handler(event, context=None):
                 if ev is not None:
                     events.append(ev)
 
-            if len(events) >= 10000:
-                # send to Axiom
-                push_events_to_axiom(events)
-                events.clear()
+                if len(events) >= batch_size:
+                    # send to Axiom
+                    push_events_to_axiom(events)
+                    events.clear()
 
         except Exception as e:
             print(e)
