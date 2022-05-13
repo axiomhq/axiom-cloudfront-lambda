@@ -3,6 +3,10 @@ Parameters:
     Description: The Name of the S3 Bucket.
     Type: String
     MinLength: 1
+  BucketLogsKeyPrefix:
+    Type: String
+    Description: The S3 Bucket Key Prefix where logs are sent.
+    Default: ""
   AxiomToken:
     Description: The Token of User in Axiom. Must start with xaat- or xait-.
     Type: String
@@ -28,6 +32,11 @@ Resources:
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:Put'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: !Ref BucketLogsKeyPrefix
             Function: !GetAtt
               - LogsLambda
               - Arn
