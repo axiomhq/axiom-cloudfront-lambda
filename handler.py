@@ -88,6 +88,9 @@ def log_to_event(log):
 
 
 def push_events_to_axiom(events):
+    if len(events) == 0:
+        return
+
     # push events to axiom
     axiom_url = os.getenv("AXIOM_URL")
     if axiom_url == None:
@@ -120,10 +123,10 @@ def fetch_s3_object(bucket, key):
     return decompressed_body
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context=None):
+    print(f"Processing", len(event["Records"]), "objects")
+
     events = []
-    num_records = len(event["Records"])
-    print(f"Processing {num_records} records")
     for record in event["Records"]:
         # Get the object from the event and show its content type
         bucket = record["s3"]["bucket"]["name"]
@@ -147,14 +150,13 @@ def lambda_handler(event, context):
                 if ev is not None:
                     events.append(ev)
 
-                if len(events) >= 1000:
-                    # send to Axiom
-                    push_events_to_axiom(events)
+            if len(events) >= 10000:
+                # send to Axiom
+                push_events_to_axiom(events)
+                events.clear()
+
         except Exception as e:
             print(e)
             raise e
 
-    if len(events) > 0:
-        # send to Axiom
-        push_events_to_axiom(events)
-        events = []
+    push_events_to_axiom(events)
