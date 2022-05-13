@@ -2,20 +2,27 @@ import gzip
 import json
 import os
 import urllib
+from urllib.parse import unquote
 
 import boto3
 from dateutil.parser import parse
-from urllib.parse import unquote
 
 print("Loading function")
 
 region = os.getenv("AWS_REGION")  # add automatically by lambda
+batch_size = int(os.getenv("BATCH_SIZE", 2000))
 
 s3 = boto3.client("s3", region_name=region)
 fields_prefix = "#Fields: "
 
 
-# Fields: date time x-edge-location sc-bytes c-ip cs-method cs(Host) cs-uri-stem sc-status cs(Referer) cs(User-Agent) cs-uri-query cs(Cookie) x-edge-result-type x-edge-request-id x-host-header cs-protocol cs-bytes time-taken x-forwarded-for ssl-protocol ssl-cipher x-edge-response-result-type cs-protocol-version fle-status fle-encrypted-fields c-port time-to-first-byte x-edge-detailed-result-type sc-content-type sc-content-len sc-range-start sc-range-end
+# Fields:
+# date time x-edge-location sc-bytes c-ip cs-method cs(Host) cs-uri-stem
+# sc-status cs(Referer) cs(User-Agent) cs-uri-query cs(Cookie) x-edge-result-type
+# x-edge-request-id x-host-header cs-protocol cs-bytes time-taken x-forwarded-for
+# ssl-protocol ssl-cipher x-edge-response-result-type cs-protocol-version fle-status
+# fle-encrypted-fields c-port time-to-first-byte x-edge-detailed-result-type
+# sc-content-type sc-content-len sc-range-start sc-range-end
 def log_to_event(log):
     if "time" not in log:
         return
@@ -82,6 +89,9 @@ def log_to_event(log):
 
 
 def push_events_to_axiom(events):
+    if len(events) == 0:
+        return
+
     # push events to axiom
     axiom_url = os.getenv("AXIOM_URL")
     if axiom_url == None:
@@ -100,7 +110,10 @@ def push_events_to_axiom(events):
         },
     )
     result = urllib.request.urlopen(req)
-    return result
+    if result.status != 200:
+        raise f"Unexpected status {result.status}"
+    else:
+        print(f"Ingested {len(events)} events")
 
 
 def fetch_s3_object(bucket, key):
@@ -111,20 +124,21 @@ def fetch_s3_object(bucket, key):
     return decompressed_body
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context=None):
+    print(f"Processing", len(event["Records"]), "objects")
+
+    events = []
     for record in event["Records"]:
         # Get the object from the event and show its content type
         bucket = record["s3"]["bucket"]["name"]
         key = urllib.parse.unquote_plus(record["s3"]["object"]["key"], encoding="utf-8")
         try:
-
             # get and decompress object
             decompressed_body = fetch_s3_object(bucket, key)
 
             # parse TSV
             lines = str(decompressed_body, "utf-8").split("\n")
             columns = []
-            events = []
             for line in lines:
                 if line.startswith(fields_prefix):
                     columns = line[len(fields_prefix) :].split(" ")
@@ -137,17 +151,13 @@ def lambda_handler(event, context):
                 if ev is not None:
                     events.append(ev)
 
-            # send to Axiom
-            result = push_events_to_axiom(events)
-            if result.status != 200:
-                raise f"Unexpected status {result.status}"
-            else:
-                print(f"Ingested {len(events)} events")
+                if len(events) >= batch_size:
+                    # send to Axiom
+                    push_events_to_axiom(events)
+                    events.clear()
+
         except Exception as e:
             print(e)
-            print(
-                "Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.".format(
-                    key, bucket
-                )
-            )
             raise e
+
+    push_events_to_axiom(events)
