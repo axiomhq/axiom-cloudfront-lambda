@@ -149,6 +149,7 @@ def lambda_handler(event, context=None):
                 values = unquote(line).split("\t")
                 ev = log_to_event(dict(zip(columns, values)))
                 if ev is not None:
+                    ev["_log_source"] = key
                     events.append(ev)
 
                 if len(events) >= batch_size:
