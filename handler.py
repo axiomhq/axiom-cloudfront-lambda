@@ -137,7 +137,7 @@ def lambda_handler(event, context=None):
             decompressed_body = fetch_s3_object(bucket, key)
 
             # parse TSV
-            lines = str(decompressed_body, "utf-8").split("\n")
+            lines = unquote(unquote(str(decompressed_body, "utf-8"))).split("\n")
             columns = []
             for line in lines:
                 if line.startswith(fields_prefix):
@@ -146,7 +146,7 @@ def lambda_handler(event, context=None):
                 elif line.startswith("#"):
                     continue
 
-                values = unquote(line).split("\t")
+                values = line.split("\t")
                 ev = log_to_event(dict(zip(columns, values)))
                 if ev is not None:
                     ev["_log_source"] = key
