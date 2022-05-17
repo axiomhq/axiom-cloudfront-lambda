@@ -7,5 +7,6 @@ logs from your CloudFront to [Axiom](https://axiom.co).
 
 1. Create an account at [Axiom Cloud](https://cloud.axiom.co)
 2. Create a dataset and an API token with ingest permission for that dataset
-3. Launch the stack: [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=CloudFront-Axiom&templateURL=https://axiom-cloudformation-stacks.s3.amazonaws.com/axiom-cloudfront-lambda-cloudformation-stack.yaml)
-4. Set up your CloudFront to store logs in the bucket you specified
+3. If S3 bucket exists, [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=CloudFront-Axiom&templateURL=https://axiom-cloudformation-stacks.s3.amazonaws.com/axiom-cloudfront-lambda-base-cloudformation-stack.yaml)
+4. If S3 bucket doesn't exists, Launch the stack: [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=CloudFront-Axiom&templateURL=https://axiom-cloudformation-stacks.s3.amazonaws.com/axiom-cloudfront-lambda-cloudformation-stack.yaml)
+5. Set up your CloudFront to store logs in the bucket you specified
