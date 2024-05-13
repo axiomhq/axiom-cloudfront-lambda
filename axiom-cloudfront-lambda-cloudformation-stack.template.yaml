@@ -27,6 +27,12 @@ Parameters:
     Default: 3
     MaxValue: 900
     MinValue: 1
+  LambdaMemory:
+    Type: Number
+    Description: Memory Size allocated to lambda function in MB.
+    default: 128
+    MaxValue: 10240
+    MinValue: 128
 Resources:
   LogsBucket:
     Type: AWS::S3::Bucket
@@ -83,6 +89,7 @@ Resources:
       Runtime: python3.9
       FunctionName: axiom-cloudfront-lambda
       Timeout: !Ref "LambdaTimout"
+      MemorySize: !Ref "LambdaMemory"
       Handler: index.lambda_handler
       Code:
         ZipFile: |
