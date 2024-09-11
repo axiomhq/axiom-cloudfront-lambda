@@ -1,12 +1,7 @@
 # Axiom CloudFront Lambda [![CI](https://github.com/axiomhq/axiom-cloudfront-lambda/actions/workflows/ci.yaml/badge.svg)](https://github.com/axiomhq/axiom-cloudfront-lambda/actions/workflows/ci.yaml)
 
-Easy to use AWS CloudFormation template to deploy a Bucket and a Lambda to send
-logs from your CloudFront to [Axiom](https://axiom.co).
+Use the Axiom CloudFront Lambda to send CloudFront logs to [Axiom](https://axiom.co) using AWS S3 bucket and Lambda. After you set this up, you can observe your static and dynamic content and run deep queries on your CloudFront distribution logs efficiently and properly.
 
-## Guide
+## Documentation
 
-1. Create an account at [Axiom Cloud](https://cloud.axiom.co)
-2. Create a dataset and an API token with ingest permission for that dataset
-3. If S3 bucket exists, [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=CloudFront-Axiom&templateURL=https://axiom-cloudformation-stacks.s3.amazonaws.com/axiom-cloudfront-lambda-base-cloudformation-stack.yaml)
-4. If S3 bucket doesn't exists, Launch the stack: [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=CloudFront-Axiom&templateURL=https://axiom-cloudformation-stacks.s3.amazonaws.com/axiom-cloudfront-lambda-cloudformation-stack.yaml)
-5. Set up your CloudFront to store logs in the bucket you specified
+For more information on how to set up and use the Axiom CloudFront Lambda, see the [Axiom documentation](https://axiom.co/docs/send-data/cloudfront).
