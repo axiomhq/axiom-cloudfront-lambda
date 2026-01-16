@@ -98,16 +98,16 @@ def build_ingest_url(dataset):
     """
     Build the ingest URL based on environment configuration.
 
-    Priority: AXIOM_INGEST_URL > AXIOM_URL > default cloud endpoint
+    Priority: AXIOM_EDGE_URL > AXIOM_URL > default cloud endpoint
 
-    - AXIOM_INGEST_URL: Edge ingest endpoint (e.g., https://eu-central-1.aws.edge.axiom.co)
-                        Uses new path format: /v1/ingest/{dataset}
+    - AXIOM_EDGE_URL: Edge ingest endpoint (e.g., https://eu-central-1.aws.edge.axiom.co)
+                      Uses new path format: /v1/ingest/{dataset}
     - AXIOM_URL: Legacy base URL for backwards compatibility
                  Uses legacy path format: /api/v1/datasets/{dataset}/ingest
     """
-    ingest_url = os.getenv("AXIOM_INGEST_URL")
-    if ingest_url:
-        return f"{ingest_url.rstrip('/')}/v1/ingest/{dataset}"
+    edge_url = os.getenv("AXIOM_EDGE_URL")
+    if edge_url:
+        return f"{edge_url.rstrip('/')}/v1/ingest/{dataset}"
 
     axiom_url = os.getenv("AXIOM_URL")
     if axiom_url:

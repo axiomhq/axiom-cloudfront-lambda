@@ -12,8 +12,8 @@ Parameters:
   AxiomURL:
     Type: String
     Default: ""
-    Description: The base URL of Axiom API endpoint (legacy). Use AxiomIngestURL for edge deployments.
-  AxiomIngestURL:
+    Description: The base URL of Axiom API endpoint (legacy). Use AxiomEdgeURL for edge deployments.
+  AxiomEdgeURL:
     Type: String
     Default: ""
     Description: The Axiom edge ingest endpoint URL (e.g., https://eu-central-1.aws.edge.axiom.co). Takes precedence over AxiomURL.
@@ -70,7 +70,7 @@ Resources:
           AXIOM_TOKEN: !Ref 'AxiomToken'
           AXIOM_DATASET: !Ref 'AxiomDataset'
           AXIOM_URL: !Ref 'AxiomURL'
-          AXIOM_INGEST_URL: !Ref 'AxiomIngestURL'
+          AXIOM_EDGE_URL: !Ref 'AxiomEdgeURL'
   LogsLambdaPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
