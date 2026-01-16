@@ -98,22 +98,30 @@ def build_ingest_url(dataset):
     """
     Build the ingest URL based on environment configuration.
 
-    Priority: AXIOM_EDGE_URL > AXIOM_URL > default cloud endpoint
+    Priority: AXIOM_URL > AXIOM_REGION > default cloud endpoint
 
-    - AXIOM_EDGE_URL: Edge ingest endpoint (e.g., https://eu-central-1.aws.edge.axiom.co)
-                      Uses new path format: /v1/ingest/{dataset}
-    - AXIOM_URL: Legacy base URL for backwards compatibility
-                 Uses legacy path format: /api/v1/datasets/{dataset}/ingest
+    - AXIOM_URL: URI of the Axiom endpoint to send data to.
+                 If a path is provided, the URL is used as-is.
+                 If no path (or only `/`) is provided, `/v1/datasets/{dataset}/ingest`
+                 is appended for backwards compatibility.
+    - AXIOM_REGION: The Axiom regional edge domain (domain name only, no scheme/path).
+                    When set, data is sent to `https://{region}/v1/ingest/{dataset}`.
     """
-    edge_url = os.getenv("AXIOM_EDGE_URL")
-    if edge_url:
-        return f"{edge_url.rstrip('/')}/v1/ingest/{dataset}"
-
     axiom_url = os.getenv("AXIOM_URL")
     if axiom_url:
-        return f"{axiom_url.rstrip('/')}/api/v1/datasets/{dataset}/ingest"
+        url = axiom_url.rstrip("/")
+        parsed = urllib.parse.urlparse(url)
+        path = parsed.path
+        if not path or path == "/":
+            return f"{url}/v1/datasets/{dataset}/ingest"
+        return url
 
-    return f"https://cloud.axiom.co/api/v1/datasets/{dataset}/ingest"
+    axiom_region = os.getenv("AXIOM_REGION")
+    if axiom_region:
+        region = axiom_region.rstrip("/")
+        return f"https://{region}/v1/ingest/{dataset}"
+
+    return f"https://cloud.axiom.co/v1/datasets/{dataset}/ingest"
 
 
 def push_events_to_axiom(events):
