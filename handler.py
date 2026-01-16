@@ -88,18 +88,36 @@ def log_to_event(log):
     return ev
 
 
+def build_ingest_url(dataset):
+    """
+    Build the ingest URL based on environment configuration.
+    
+    Priority: AXIOM_INGEST_URL > AXIOM_URL > default cloud endpoint
+    
+    - AXIOM_INGEST_URL: Edge ingest endpoint (e.g., https://eu-central-1.aws.edge.axiom.co)
+                        Uses new path format: /v1/ingest/{dataset}
+    - AXIOM_URL: Legacy base URL for backwards compatibility
+                 Uses legacy path format: /api/v1/datasets/{dataset}/ingest
+    """
+    ingest_url = os.getenv("AXIOM_INGEST_URL")
+    if ingest_url:
+        return f"{ingest_url.rstrip('/')}/v1/ingest/{dataset}"
+
+    axiom_url = os.getenv("AXIOM_URL")
+    if axiom_url:
+        return f"{axiom_url.rstrip('/')}/api/v1/datasets/{dataset}/ingest"
+
+    return f"https://cloud.axiom.co/api/v1/datasets/{dataset}/ingest"
+
+
 def push_events_to_axiom(events):
     if len(events) == 0:
         return
 
-    # push events to axiom
-    axiom_url = os.getenv("AXIOM_URL")
-    if axiom_url == None:
-        axiom_url = "https://cloud.axiom.co"
     axiom_token = os.getenv("AXIOM_TOKEN")
     axiom_dataset = os.getenv("AXIOM_DATASET")
 
-    url = f"{axiom_url}/api/v1/datasets/{axiom_dataset}/ingest"
+    url = build_ingest_url(axiom_dataset)
     data = json.dumps(events)
     req = urllib.request.Request(
         url,
