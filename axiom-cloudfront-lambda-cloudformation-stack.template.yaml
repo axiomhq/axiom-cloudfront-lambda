@@ -16,11 +16,11 @@ Parameters:
   AxiomURL:
     Type: String
     Default: ""
-    Description: URI of the Axiom endpoint. If a path is provided, used as-is. If no path, /v1/datasets/{dataset}/ingest is appended. Takes precedence over AxiomRegion.
-  AxiomRegion:
+    Description: URI of the Axiom endpoint. If a path is provided, used as-is. If no path, /v1/datasets/{dataset}/ingest is appended. Takes precedence over AxiomEdgeURL.
+  AxiomEdgeURL:
     Type: String
     Default: ""
-    Description: Axiom regional edge domain (e.g., eu-central-1.aws.edge.axiom.co). Domain only, no scheme/path. Data sent to https://{region}/v1/ingest/{dataset}.
+    Description: Axiom regional edge domain (e.g., eu-central-1.aws.edge.axiom.co). Domain only, no scheme/path. Data sent to https://{edge_url}/v1/ingest/{dataset}.
   AxiomDataset:
     Type: String
     Description: The Name of the Dataset in Axiom.
@@ -93,7 +93,7 @@ Resources:
           AXIOM_TOKEN: !Ref 'AxiomToken'
           AXIOM_DATASET: !Ref 'AxiomDataset'
           AXIOM_URL: !Ref 'AxiomURL'
-          AXIOM_REGION: !Ref 'AxiomRegion'
+          AXIOM_EDGE_URL: !Ref 'AxiomEdgeURL'
   LogsLambdaPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
