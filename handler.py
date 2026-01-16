@@ -44,44 +44,50 @@ def log_to_event(log):
         "user_agent": log["cs(User-Agent)"] if log["cs(User-Agent)"] != "-" else None,
         "query_string": log["cs-uri-query"] if log["cs-uri-query"] != "-" else None,
         "cookie": log["cs(Cookie)"] if log["cs(Cookie)"] != "-" else None,
-        "result_type": log["x-edge-result-type"]
-        if log["x-edge-result-type"] != "-"
-        else None,
-        "request_id": log["x-edge-request-id"]
-        if log["x-edge-request-id"] != "-"
-        else None,
+        "result_type": (
+            log["x-edge-result-type"] if log["x-edge-result-type"] != "-" else None
+        ),
+        "request_id": (
+            log["x-edge-request-id"] if log["x-edge-request-id"] != "-" else None
+        ),
         "host_header": log["x-host-header"] if log["x-host-header"] != "-" else None,
         "request_protocol": log["cs-protocol"] if log["cs-protocol"] != "-" else None,
         "request_bytes": int(log["cs-bytes"]) if log["cs-bytes"] != "-" else None,
         "time_taken_s": float(log["time-taken"]) if log["time-taken"] != "-" else None,
-        "x_forwarded_for": log["x-forwarded-for"]
-        if log["x-forwarded-for"] != "-"
-        else None,
+        "x_forwarded_for": (
+            log["x-forwarded-for"] if log["x-forwarded-for"] != "-" else None
+        ),
         "ssl_protocol": log["ssl-protocol"] if log["ssl-protocol"] != "-" else None,
         "ssl_cipher": log["ssl-cipher"] if log["ssl-cipher"] != "-" else None,
-        "response_result_type": log["x-edge-response-result-type"]
-        if log["x-edge-response-result-type"] != "-"
-        else None,
-        "http_version": log["cs-protocol-version"]
-        if log["cs-protocol-version"] != "-"
-        else None,
+        "response_result_type": (
+            log["x-edge-response-result-type"]
+            if log["x-edge-response-result-type"] != "-"
+            else None
+        ),
+        "http_version": (
+            log["cs-protocol-version"] if log["cs-protocol-version"] != "-" else None
+        ),
         "fle_status": log["fle-status"] if log["fle-status"] != "-" else None,
-        "fle_encrypted_fields": log["fle-encrypted-fields"]
-        if log["fle-encrypted-fields"] != "-"
-        else None,
+        "fle_encrypted_fields": (
+            log["fle-encrypted-fields"] if log["fle-encrypted-fields"] != "-" else None
+        ),
         "port": int(log["c-port"]) if log["c-port"] != "-" else None,
-        "time_to_first_byte_s": float(log["time-to-first-byte"])
-        if log["time-to-first-byte"] != "-"
-        else None,
-        "x_edge_detailed_result_type": log["x-edge-detailed-result-type"]
-        if log["x-edge-detailed-result-type"] != "-"
-        else None,
-        "content_type": log["sc-content-type"]
-        if log["sc-content-type"] != "-"
-        else None,
-        "content_len": int(log["sc-content-len"])
-        if log["sc-content-len"] != "-"
-        else None,
+        "time_to_first_byte_s": (
+            float(log["time-to-first-byte"])
+            if log["time-to-first-byte"] != "-"
+            else None
+        ),
+        "x_edge_detailed_result_type": (
+            log["x-edge-detailed-result-type"]
+            if log["x-edge-detailed-result-type"] != "-"
+            else None
+        ),
+        "content_type": (
+            log["sc-content-type"] if log["sc-content-type"] != "-" else None
+        ),
+        "content_len": (
+            int(log["sc-content-len"]) if log["sc-content-len"] != "-" else None
+        ),
         "range_start": log["sc-range-start"] if log["sc-range-start"] != "-" else None,
         "range_end": log["sc-range-end"] if log["sc-range-end"] != "-" else None,
     }
@@ -91,9 +97,9 @@ def log_to_event(log):
 def build_ingest_url(dataset):
     """
     Build the ingest URL based on environment configuration.
-    
+
     Priority: AXIOM_INGEST_URL > AXIOM_URL > default cloud endpoint
-    
+
     - AXIOM_INGEST_URL: Edge ingest endpoint (e.g., https://eu-central-1.aws.edge.axiom.co)
                         Uses new path format: /v1/ingest/{dataset}
     - AXIOM_URL: Legacy base URL for backwards compatibility
