@@ -98,28 +98,31 @@ def build_ingest_url(dataset):
     """
     Build the ingest URL based on environment configuration.
 
-    Priority: AXIOM_URL > AXIOM_EDGE_URL > default cloud endpoint
+    Priority: AXIOM_EDGE_URL > AXIOM_URL > default cloud endpoint
 
-    - AXIOM_URL: URI of the Axiom endpoint to send data to.
+    - AXIOM_EDGE_URL: Edge endpoint URL for regional ingestion.
+                      If a path is provided, the URL is used as-is.
+                      If no path (or only `/`), `/v1/ingest/{dataset}` is appended.
+    - AXIOM_URL: Base Axiom API URL (legacy).
                  If a path is provided, the URL is used as-is.
-                 If no path (or only `/`) is provided, `/v1/datasets/{dataset}/ingest`
-                 is appended for backwards compatibility.
-    - AXIOM_EDGE_URL: The Axiom regional edge domain (domain name only, no scheme/path).
-                      When set, data is sent to `https://{edge_url}/v1/ingest/{dataset}`.
+                 If no path (or only `/`), `/v1/datasets/{dataset}/ingest` is appended
+                 for backwards compatibility.
     """
+    axiom_edge_url = os.getenv("AXIOM_EDGE_URL")
+    if axiom_edge_url:
+        url = axiom_edge_url.rstrip("/")
+        parsed = urllib.parse.urlparse(url)
+        if not parsed.path or parsed.path == "/":
+            return f"{url}/v1/ingest/{dataset}"
+        return url
+
     axiom_url = os.getenv("AXIOM_URL")
     if axiom_url:
         url = axiom_url.rstrip("/")
         parsed = urllib.parse.urlparse(url)
-        path = parsed.path
-        if not path or path == "/":
+        if not parsed.path or parsed.path == "/":
             return f"{url}/v1/datasets/{dataset}/ingest"
         return url
-
-    axiom_edge_url = os.getenv("AXIOM_EDGE_URL")
-    if axiom_edge_url:
-        edge_url = axiom_edge_url.rstrip("/")
-        return f"https://{edge_url}/v1/ingest/{dataset}"
 
     return f"https://cloud.axiom.co/v1/datasets/{dataset}/ingest"
 
