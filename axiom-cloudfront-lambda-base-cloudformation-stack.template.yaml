@@ -11,8 +11,12 @@ Parameters:
     AllowedPattern: "^(xaat-|xait-).*"
   AxiomURL:
     Type: String
-    Default: "https://cloud.axiom.co"
-    Description: The URL of Axiom endpoint. Defaults to "https://cloud.axiom.co".
+    Default: ""
+    Description: Base Axiom API URL (legacy). If a path is provided, used as-is. If no path, /v1/datasets/{dataset}/ingest is appended.
+  AxiomEdgeURL:
+    Type: String
+    Default: ""
+    Description: Edge endpoint URL for regional ingestion (e.g., https://eu-central-1.aws.edge.axiom.co). Takes precedence over AxiomURL. If no path, /v1/ingest/{dataset} is appended.
   AxiomDataset:
     Type: String
     Description: The Name of the Dataset in Axiom.
@@ -66,6 +70,7 @@ Resources:
           AXIOM_TOKEN: !Ref 'AxiomToken'
           AXIOM_DATASET: !Ref 'AxiomDataset'
           AXIOM_URL: !Ref 'AxiomURL'
+          AXIOM_EDGE_URL: !Ref 'AxiomEdgeURL'
   LogsLambdaPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
